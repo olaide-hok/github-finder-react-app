@@ -8,6 +8,7 @@ const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN
 export const GithubProvider = ({children}) => {
     const initialState = {
         users: [],
+        user: {},
         loading: false
     } 
     const [state, dispatch] = useReducer(githubReducer, initialState)
@@ -33,22 +34,46 @@ export const GithubProvider = ({children}) => {
         })
     }
 
-    // Gets initial users(for testing purposes)
-    const fetchUsers = async () => {
+    // Get User
+    const getUser = async (login) => {
         setLoading()
 
-        const response = await fetch(`${GITHUB_URL}/users`, {
+        const response = await fetch(`${GITHUB_URL}/users/${login}`, 
+        {
             headers: {
                 Authorization: `token ${GITHUB_TOKEN}`
             }
         })
-        const data = await response.json()
 
-        dispatch({
-            type: 'GET_USERS',
-            payload: data
-        })
+        if (response.status === 404) {
+            window.location = '/notfound'
+        } else {
+            const data = await response.json()
+
+            dispatch({
+                type: 'GET_USER',
+                payload: data
+            })
+            
+        }
     }
+
+    // Gets initial users(for testing purposes)
+    // const fetchUsers = async () => {
+    //     setLoading()
+
+    //     const response = await fetch(`${GITHUB_URL}/users`, {
+    //         headers: {
+    //             Authorization: `token ${GITHUB_TOKEN}`
+    //         }
+    //     })
+    //     const data = await response.json()
+
+    //     dispatch({
+    //         type: 'GET_USERS',
+    //         payload: data
+    //     })
+    // }
 
     // Clear users from state
     const clearUsers = () => {
@@ -65,8 +90,9 @@ export const GithubProvider = ({children}) => {
 
     return <GithubContext.Provider value={{
             users: state.users,
+            user: state.user,
             loading: state.loading,
-            fetchUsers,
+            getUser,
             searchUsers,
             clearUsers
         }}
